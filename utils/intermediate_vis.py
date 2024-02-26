@@ -37,7 +37,7 @@ class Vis_iter(object):
             self.label_to_names = np.asarray([label[map_i] for map_i in map_index])
 
         elif args.dataset =='carla':
-            config_file = os.path.join('/home/jumin/multinomial_diffusion/datasets/carla.yaml')
+            config_file = os.path.join('./datasets/carla.yaml')  #os.path.join('/home/jumin/multinomial_diffusion/datasets/carla.yaml')
             carla_config = yaml.safe_load(open(config_file, 'r'))
             self.color_map = carla_config["remap_color_map"]
             self.remap = None

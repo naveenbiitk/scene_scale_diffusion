@@ -32,7 +32,7 @@ def get_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--gpu', type=int, default=None, help='GPU id to use. If given, only the specific gpu will be used, and ddp will be disabled')
-    parser.add_argument('--distribution', type=bool, default=True)
+    parser.add_argument('--distribution', type=bool, default=False)
     parser.add_argument('--num_node', type=int, default=1, help='number of nodes for distributed training')
     parser.add_argument('--node_rank', type=int, default=0, help='node rank for distributed training')
     parser.add_argument('--dist_url', type=str, default='tcp://127.0.0.1:29500', help='url used to set up distributed training')
@@ -41,7 +41,7 @@ def get_args():
     parser.add_argument('--dataset', type=str, default='carla', choices='carla')
     # Train params
     parser.add_argument('--batch_size', type=int, default=4)
-    parser.add_argument('--num_workers', type=int, default=4)
+    parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument('--pin_memory', type=eval, default=False)
     parser.add_argument('--augmentation', type=str, default=None)
 
@@ -51,9 +51,9 @@ def get_args():
     parser.add_argument('--recon_loss', default=False)
     parser.add_argument('--mode', default='wo_diff', choices='gen, con, vis, l_vae l_gen, wo_diff')
     parser.add_argument('--l_size', default='32322', choices='882, 16162, 32322')
-    parser.add_argument('--init_size', default=8)
-    parser.add_argument('--l_attention', default=True)
-    parser.add_argument('--vq_size', default=50)
+    parser.add_argument('--init_size',type=int, default=8)
+    parser.add_argument('--l_attention',type=bool, default=True)
+    parser.add_argument('--vq_size',type=int, default=50)
 
     # Model params
     parser.add_argument('--auxiliary_loss_weight', type=int, default=0.0005)
@@ -71,10 +71,10 @@ def get_args():
     parser.add_argument('--gamma', type=float, default=0.1)
 
     # Train params
-    parser.add_argument('--epochs', type=int, default=5000)
-    parser.add_argument('--resume', type=str, default=False)
-    parser.add_argument('--resume_path', type=str, default='')
-    parser.add_argument('--vqvae_path', type=str, default='')
+    parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--resume', type=str, default=True)
+    parser.add_argument('--resume_path', type=str, default='/nethome/nnagarathinam6/diffusion_ws/scene_scale_diffusion/output_data/epoch9.tar')
+    parser.add_argument('--vqvae_path', type=str, default='/nethome/nnagarathinam6/diffusion_ws/scene_scale_diffusion/output_data_lvae/epoch19.tar')
 
     # Logging params
     parser.add_argument('--eval_every', type=int, default=10)
@@ -82,7 +82,7 @@ def get_args():
     parser.add_argument('--completion_epoch', type=int, default=20)
     parser.add_argument('--log_tb', type=eval, default=True)
     parser.add_argument('--log_home', type=str, default=None)
-    parser.add_argument('--log_path', type=str, default='')
+    parser.add_argument('--log_path', type=str, default='./output_data/')
 
     args = parser.parse_args()
     return args
@@ -149,8 +149,11 @@ def start(local_rank, args):
     ######################
     elif args.mode == 'l_vae':
         model = vqvae(args, completion_criterion).cuda()
+        #print('----the model----')
+        #print(model)
+        #print(args.gpu) //None
         if args.distribution:
-            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=False)
+            model = torch.nn.parallel.DistributedDataParallel(model)
 
     elif args.mode == 'l_gen':
         Dense = vqvae(args, completion_criterion).cuda()

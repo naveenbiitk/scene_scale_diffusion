@@ -6,16 +6,18 @@ import argparse
 import numpy as np
 import yaml
 import struct
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--M', default='scene-scale-diffusion') # VQVAE, multinomial_diffusion
 parser.add_argument('--Driver', default='D')
 parser.add_argument('--frame', default='0')
-parser.add_argument('--file', default='result_')
+parser.add_argument('--file', default='input_')
 parser.add_argument('--folder', default='Completion')
 parser.add_argument('--model', default='image_init8_concat_att')
 parser.add_argument('--name', default='Semantic Scene Completion')
-parser.add_argument('--invalid', default = False)
+parser.add_argument('--invalid', default = True)
+parser.add_argument('--dataset', default = 'carla')
 
 class SpheresApp:
     MENU_SCENE = 1
@@ -23,7 +25,7 @@ class SpheresApp:
     MENU_QUIT = 3
 
     def __init__(self, opt):
-        self._id = 0
+        self._id = 1
         self.opt = opt
         
         self.window = gui.Application.instance.create_window("Semantic Scene Completion", 1500, 1000)
@@ -108,11 +110,13 @@ class SpheresApp:
 def get_voxel(opt):
 
     if opt.invalid :
-        invalid_path = opt.Driver+':/'+opt.M+ '/result/' + opt.model +'/Invalid/invalid_'+ opt.frame +'.txt'
+        #invalid_path = opt.Driver+':/'+opt.M+ '/result/' + opt.model +'/Invalid/invalid_'+ opt.frame +'.txt'
+        invalid_path = '/nethome/nnagarathinam6/diffusion_ws/scene_scale_diffusion/result/Invalid/invalid_5315.txt'
         invalid_points = np.loadtxt(invalid_path, delimiter=' ')
         invalid_colors = np.full(len(invalid_points,), 0)
-                
-        point_cloud_path = opt.Driver+':/'+opt.M+ '/result/' + opt.model +'/' + opt.folder +'/'+ opt.file + opt.frame +'.txt'
+
+        point_cloud_path = '/nethome/nnagarathinam6/diffusion_ws/scene_scale_diffusion/result/Completion/result_5315.txt'        
+        #point_cloud_path = opt.Driver+':/'+opt.M+ '/result/' + opt.model +'/' + opt.folder +'/'+ opt.file + opt.frame +'.txt'
         points_colors = np.loadtxt(point_cloud_path, delimiter=' ')
         points = points_colors[:, 1:]
         colors = points_colors[:, 0]
@@ -124,13 +128,14 @@ def get_voxel(opt):
         colors = colors[index, ...]
         
     else :
-        point_cloud_path = 'C:/Users/jumin/Dataset/result_319_110.txt'
+        point_cloud_path = '/nethome/nnagarathinam6/diffusion_ws/scene_scale_diffusion/result/Completion/result_5315.txt'        
+        #point_cloud_path = 'C:/Users/jumin/Dataset/result_319_110.txt'
         points_colors = np.loadtxt(point_cloud_path, delimiter=' ')
         points = points_colors[:, 1:]
         colors = points_colors[:, 0]
 
     if opt.dataset == 'carla' : 
-        config_file = 'C:/Users/jumin/Dataset/carla.yaml'
+        config_file = os.path.join('/nethome/nnagarathinam6/diffusion_ws/scene_scale_diffusion/datasets/carla.yaml')
         config = yaml.safe_load(open(config_file, 'r'))
         color_map = config["remap_color_map"]
     
@@ -139,7 +144,8 @@ def get_voxel(opt):
     return points, color
 
 def get_input(opt):
-    point_cloud_path=opt.Driver+':/'+opt.M+'/result/' + opt.model +'/Invalid/invalid_' + opt.frame +'.txt'
+    # point_cloud_path=opt.Driver+':/'+opt.M+'/result/' + opt.model +'/Invalid/invalid_' + opt.frame +'.txt'
+    point_cloud_path = '/nethome/nnagarathinam6/diffusion_ws/scene_scale_diffusion/result/Input/input_5315.txt'
     points_colors = np.loadtxt(point_cloud_path, delimiter=' ')
     points = points_colors
     pcd = o3d.geometry.PointCloud()

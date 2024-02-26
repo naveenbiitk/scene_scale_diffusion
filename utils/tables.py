@@ -4,7 +4,7 @@ import os
 import pickle
 import numpy as np
 import torch.nn.functional as F
-import open3d as o3d
+# import open3d as o3d
 
 def get_args_table(args_dict):
     table = PrettyTable(['Arg', 'Value'])
@@ -28,6 +28,8 @@ def get_metric_table(metric_dict, epochs):
 
 def create_folders(args):
     # Create log folder
+    print('---args.log_path----')
+    print(args.log_path)
     os.makedirs(args.log_path, exist_ok=True)
     os.makedirs(args.log_path+'/Completion', exist_ok=True)
     os.makedirs(args.log_path+'/Input', exist_ok=True)
@@ -66,9 +68,9 @@ def visualization(args, recons, input_data, output, invalid, iteration):
         out_indexs = torch.cat(output_index, dim = 0).cpu().numpy()
         np.savetxt(args.log_path+'/Completion/result_{}.txt'.format((iteration * args.batch_size) + batch), colors_indexs)
 
-        '''np.savetxt(args.log_path+'/Input/input_{}.txt'.format((iteration * args.batch_size) + batch), input_points)
+        np.savetxt(args.log_path+'/Input/input_{}.txt'.format((iteration * args.batch_size) + batch), input_points)
         np.savetxt(args.log_path+'/Invalid/invalid_{}.txt'.format((iteration * args.batch_size) + batch), invalid_points)
-        np.savetxt(args.log_path+'/Output/gt_{}.txt'.format((iteration * args.batch_size) + batch), out_indexs)'''
+        np.savetxt(args.log_path+'/Output/gt_{}.txt'.format((iteration * args.batch_size) + batch), out_indexs)
         
 
 def completion_vis(args, input_p, recons):

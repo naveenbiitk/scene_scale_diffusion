@@ -7,7 +7,7 @@ import torch
 import numba as nb
 from torch.utils.data import Dataset
 
-config_file = os.path.join('/home/jumin/multinomial_diffusion/datasets/carla.yaml')
+config_file = os.path.join('/nethome/nnagarathinam6/diffusion_ws/scene_scale_diffusion/datasets/carla.yaml')
 carla_config = yaml.safe_load(open(config_file, 'r'))
 LABELS_REMAP = carla_config["learning_map"]
 REMAP_FREQUENCIES = carla_config["remap_content"]
@@ -45,6 +45,7 @@ class CarlaDataset(Dataset):
         self.sparse_output = True
         
         self._scenes = sorted(os.listdir(self._directory))
+        print(self._scenes)
         self._scenes = [os.path.join(scene, "cartesian") for scene in self._scenes]
 
         self._num_scenes = len(self._scenes)

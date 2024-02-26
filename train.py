@@ -32,7 +32,7 @@ class Experiment(object):
         self.log_path = log_path
 
         if args.dataset =='carla':
-            config_file = os.path.join('./carla.yaml')
+            config_file = os.path.join('./datasets/carla.yaml')
             carla_config = yaml.safe_load(open(config_file, 'r'))
             self.color_map = carla_config["remap_color_map"]
             self.remap = None
@@ -49,7 +49,7 @@ class Experiment(object):
         self.completion_epochs = []
 
         # Store data loaders
-        self.train_loader, self.eval_loader, self.test_loader, self.train_sampler = train_loader, eval_loader, test_loader, train_sampler
+        self.train_loader, self.eval_loader, self.test_loader, self.train_sampler = train_loader, eval_loader, test_loader, train_sampler ## error
 
         # Store args
         create_folders(args)
@@ -68,10 +68,6 @@ class Experiment(object):
         
         for epoch in range(self.current_epoch, epochs): 
             
-            # Train
-            train_dict = self.train_fn(epoch)
-            self.log_metrics(train_dict, self.train_metrics)
-
             # Checkpoint
             self.current_epoch += 1
             if (epoch+1) % self.check_every == 0:
@@ -86,18 +82,19 @@ class Experiment(object):
                 eval_dict = None
 
             if (epoch+1) % self.args.completion_epoch == 0:
-                ssc_dict, miou, seg_dict, seg_miou = self.sample()
+                ssc_dict, miou, seg_dict, seg_miou = self.sample()  ## error
                 self.log_metrics(ssc_dict, self.ssc_metrics)
                 self.log_metrics(seg_dict, self.ssc_metrics)
                 self.completion_epochs.append(epoch)
             else :
                 ssc_dict, seg_dict = None, None
 
+
             # Log
             #self.save_metrics()
             if self.args.log_tb:
-                for metric_name, metric_value in train_dict.items():
-                    self.writer.add_scalar('base/{}'.format(metric_name), metric_value, global_step=epoch+1)
+                # for metric_name, metric_value in train_dict.items():
+                #     self.writer.add_scalar('base/{}'.format(metric_name), metric_value, global_step=epoch+1)
                 if eval_dict:
                     for metric_name, metric_value in eval_dict.items():
                         self.writer.add_scalar('eval/{}'.format(metric_name), metric_value, global_step=epoch+1)
@@ -108,6 +105,17 @@ class Experiment(object):
                     for metric_name, metric_value in seg_dict.items():
                         self.writer.add_scalar('Seg/{}'.format(metric_name), metric_value, global_step=epoch+1)
                     self.writer.add_text("Seg_mIoU", get_miou_table(self.args, self.label_to_names, seg_miou).get_html_string(), global_step=epoch+1)
+
+            # Train
+            # to check evaluation
+            train_dict = self.train_fn(epoch)
+            self.log_metrics(train_dict, self.train_metrics)
+
+            if self.args.log_tb:
+                for metric_name, metric_value in train_dict.items():
+                    self.writer.add_scalar('base/{}'.format(metric_name), metric_value, global_step=epoch+1)
+           
+
 
     def train_fn(self, epoch):
         self.model.train()
@@ -133,7 +141,10 @@ class Experiment(object):
             if self.scheduler_iter: self.scheduler_iter.step()
             loss_sum += loss.detach().cpu().item() * len(output)
             loss_count += len(output)
-            print('Training. Epoch: {}/{}, Datapoint: {}/{}, Bits/dim: {:.3f}'.format(epoch+1, self.args.epochs, loss_count, len(self.train_loader.dataset), loss_sum/loss_count), end='\r')
+            #print('Training. Epoch: {}/{}, Datapoint: {}/{}, Bits/dim: {:.3f}'.format(epoch+1, self.args.epochs, loss_count, len(self.train_loader.dataset), loss_sum/loss_count), end='\r')
+            print('Training. Epoch: {}/{}, Datapoint: {}/{}, Bits/dim: {:.3f}, Train Metrics: {}, Eval Metrics: {}'.format(epoch+1, self.args.epochs, loss_count, len(self.train_loader.dataset), loss_sum/loss_count, self.train_metrics, self.eval_metrics), end='\r')
+              
+            
         print('')
         if self.scheduler_epoch: self.scheduler_epoch.step()
         return {'loss': loss_sum/loss_count}
@@ -167,10 +178,10 @@ class Experiment(object):
             all_intersections, all_unions = np.zeros(self.args.num_classes), np.zeros(self.args.num_classes) + 1e-6
             s_all_intersections, s_all_unions = np.zeros(self.args.num_classes), np.zeros(self.args.num_classes) + 1e-6
             if self.args.dataset == 'carla':
-                dataloader = self.test_loader
+                dataloader = self.eval_loader  ## error
             else :
                 dataloader = self.eval_loader
-            for iterate, (voxel_input, output, counts) in enumerate(dataloader):
+            for iterate, (voxel_input, output, counts) in enumerate(dataloader):  ## error
                 if len(voxel_input) == self.args.batch_size :
                     voxel_input = torch.from_numpy(np.asarray(voxel_input)).long().squeeze(1).cuda() # (4,1,256,256,32)
                     output = torch.from_numpy(np.asarray(output)).long().cuda()            
@@ -301,7 +312,7 @@ class Experiment(object):
         if self.scheduler_iter: self.scheduler_iter.load_state_dict(checkpoint['scheduler_iter'])
         if self.scheduler_epoch: self.scheduler_epoch.load_state_dict(checkpoint['scheduler_epoch'])
 
-        self.current_epoch = checkpoint['current_epoch']
+        self.current_epoch = checkpoint['current_epoch']-1
         self.train_metrics = checkpoint['train_metrics']
         self.eval_metrics = checkpoint['eval_metrics']
         self.eval_epochs = checkpoint['eval_epochs']

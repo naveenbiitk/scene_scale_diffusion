@@ -13,6 +13,10 @@ class VectorQuantizer(nn.Module):
         self.D = embedding_dim
         self.beta = beta
 
+        print('---------------------')
+        print(int(self.K))
+        print(self.D)
+
         self.embedding = nn.Embedding(self.K, self.D)
         self.embedding.weight.data.uniform_(-1 / self.K, 1 / self.K)
 
