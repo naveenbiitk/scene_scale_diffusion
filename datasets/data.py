@@ -3,6 +3,7 @@ import torch
 import numpy as np
 from torch.utils.data import DataLoader
 from datasets.carla_dataset import *
+from datasets.kitti_dataset import *
 
 dataset_choices = {'carla', 'kitti'}
 
@@ -83,9 +84,9 @@ def get_data(args):
         #     print(f"counts shape: {counts}")
     
     if args.dataset == 'kitti':
-        train_dir = "/nethome/nnagarathinam6/diffusion_ws/diffusion_data/KITTI/Train"
-        val_dir = "/nethome/nnagarathinam6/diffusion_ws/diffusion_data/KITTI/Val"
-        test_dir = "/nethome/nnagarathinam6/diffusion_ws/diffusion_data/KITTI/Test"
+        train_dir = "/data/kitti_lidar/dataset"
+        val_dir = "/data/kitti_lidar/dataset"
+        test_dir = "/data/kitti_lidar/dataset"
 
         x_dim = 256
         y_dim = 256
@@ -97,6 +98,10 @@ def get_data(args):
         transform_pose = True
         remap = True
         num_classes = 20
+        args.num_classes = num_classes
+        #nbr_classes: 19
+        #grid_dims: [256, 32, 256]  # (W, H, D)
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         cylindrical = False
         class_frequencies = np.array([5.41773033e+09, 1.57835390e+07, 1.25136000e+05, 1.18809000e+05,
                                 6.46799000e+05, 8.21951000e+05, 2.62978000e+05, 2.83696000e+05,
@@ -115,17 +120,33 @@ def get_data(args):
 
 
         # Data Loaders
+        B = args.batch_size
+        T = 1
+
         train_ds = KittiDataset(directory=train_dir, device=device, num_frames=T, random_flips=True, remap=remap, split='train', binary_counts=binary_counts, transform_pose=transform_pose)
         val_ds = KittiDataset(directory=val_dir, device=device, num_frames=T, remap=remap, split='valid', binary_counts=binary_counts, transform_pose=transform_pose)
-        test_ds = CarlaDataset(directory=val_dir, device=device, num_frames=T, cylindrical=cylindrical, remap=remap)
+        test_ds = KittiDataset(directory=test_dir, device=device, num_frames=T, split='test' , remap=remap)
         
-        B = args.batch_size
+
         num_workers = args.num_workers
-        dataloader = DataLoader(train_ds, batch_size=B, shuffle=True, collate_fn=carla_ds.collate_fn, num_workers=num_workers)
+        dataloader = DataLoader(train_ds, batch_size=B, shuffle=True, collate_fn=train_ds.collate_fn, num_workers=num_workers)
         dataloader_val = DataLoader(val_ds, batch_size=B, shuffle=True, collate_fn=val_ds.collate_fn, num_workers=num_workers)
         dataloader_test = DataLoader(test_ds, batch_size=1, shuffle=False, collate_fn=test_ds.collate_fn, num_workers=num_workers)
 
-
+        if args is not None and args.distributed:
+            train_sampler = torch.utils.data.distributed.DistributedSampler(train_ds, shuffle=True)
+            val_sampler = torch.utils.data.distributed.DistributedSampler(val_ds, shuffle=False)
+            test_sampler = torch.utils.data.distributed.DistributedSampler(test_ds, shuffle=False)
+            train_iters = len(train_sampler) // args.batch_size
+            val_iters = len(val_sampler) // args.batch_size
+            test_iters = len(test_sampler) // args.batch_size
+        else:
+            train_sampler = None
+            val_sampler = None
+            test_sampler = None
+            train_iters = len(train_ds) // args.batch_size
+            val_iters = len(val_ds) // args.batch_size
+            test_iters = len(test_ds) // args.batch_size
 
 
     return dataloader, dataloader_val, dataloader_test, num_classes, comp_weights, seg_weights, train_sampler

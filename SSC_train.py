@@ -38,10 +38,10 @@ def get_args():
     parser.add_argument('--dist_url', type=str, default='tcp://127.0.0.1:29500', help='url used to set up distributed training')
     
     # Data params
-    parser.add_argument('--dataset', type=str, default='carla', choices='carla')
+    parser.add_argument('--dataset', type=str, default='kitti', choices='carla')
     # Train params
-    parser.add_argument('--batch_size', type=int, default=4)
-    parser.add_argument('--num_workers', type=int, default=8)
+    parser.add_argument('--batch_size', type=int, default=1)
+    parser.add_argument('--num_workers', type=int, default=16)
     parser.add_argument('--pin_memory', type=eval, default=False)
     parser.add_argument('--augmentation', type=str, default=None)
 
@@ -72,7 +72,7 @@ def get_args():
 
     # Train params
     parser.add_argument('--epochs', type=int, default=100)
-    parser.add_argument('--resume', type=str, default=True)
+    parser.add_argument('--resume', type=str, default=False)
     parser.add_argument('--resume_path', type=str, default='/nethome/nnagarathinam6/diffusion_ws/scene_scale_diffusion/output_data/epoch9.tar')
     parser.add_argument('--vqvae_path', type=str, default='/nethome/nnagarathinam6/diffusion_ws/scene_scale_diffusion/output_data_lvae/epoch19.tar')
 
@@ -82,7 +82,7 @@ def get_args():
     parser.add_argument('--completion_epoch', type=int, default=20)
     parser.add_argument('--log_tb', type=eval, default=True)
     parser.add_argument('--log_home', type=str, default=None)
-    parser.add_argument('--log_path', type=str, default='./output_data/')
+    parser.add_argument('--log_path', type=str, default='./output_data_kitti/')
 
     args = parser.parse_args()
     return args

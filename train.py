@@ -128,6 +128,10 @@ class Experiment(object):
             self.optimizer.zero_grad()
             voxel_input = torch.from_numpy(np.asarray(voxel_input)).long().squeeze(1).cuda() # (4,1,256,256,32)
             output = torch.from_numpy(np.asarray(output)).long().cuda()            
+            # print the tensor dimensions
+            # print(f"voxel_input shape: {voxel_input.shape}")
+            # print(f"output shape: {output.shape}")
+
             if self.args.distribution:
                 loss = self.model.module(output, voxel_input)
             else : 

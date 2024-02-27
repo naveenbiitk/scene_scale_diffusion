@@ -7,7 +7,7 @@ import torch
 # import spconv
 import math
 
-config_file = os.path.join('Data/semantic-kitti.yaml')
+config_file = os.path.join('/nethome/nnagarathinam6/diffusion_ws/scene_scale_diffusion/datasets/kitti360.yaml')
 kitti_config = yaml.safe_load(open(config_file, 'r'))
 remapdict = kitti_config["learning_map"]
 # print(kitti_config['content'])
@@ -20,9 +20,9 @@ LABEL_INV_REMAP = kitti_config["learning_map_inv"]
 
 
 SPLIT_SEQUENCES = {
-    "train": ["00", "01", "02", "03", "04", "05", "06", "07", "09", "10"],
-    "valid": ["08"],
-    "test": ["11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21"]
+    "train": ["00", "01", "02", "03", "04", "05", "06"],
+    "valid": ["07"],
+    "test": ["09"]
 }
 
 
@@ -50,7 +50,7 @@ class KittiDataset(Dataset):
 
     def __init__(self, directory,
             device='cuda',
-            num_frames=4,
+            num_frames=1,
             voxelize_input=True,
             binary_counts=False,
             random_flips=False,
@@ -160,8 +160,9 @@ class KittiDataset(Dataset):
 
         # in completion we have to distinguish empty and invalid voxels.
         # Important: For voxels 0 corresponds to "empty" and not "unlabeled".
-        remap_lut[remap_lut == 0] = 255  # map 0 to 'invalid'
-        remap_lut[0] = 0  # only 'empty' stays 'empty'.
+        # Commented the both the lines down to make the code work; else the code is not working
+        # remap_lut[remap_lut == 0] = 255  # map 0 to 'invalid'
+        # remap_lut[0] = 0  # only 'empty' stays 'empty'.
 
         return remap_lut
 
@@ -284,7 +285,8 @@ class KittiDataset(Dataset):
 # len(ds)
 # print(ds[0])
 
-
+# nbr_classes: 19
+# grid_dims: [256, 32, 256]  # (W, H, D)
 
 # current_horizon, output, counts = ds[20]
 # print(np.unique(output, return_counts=True))

@@ -83,6 +83,7 @@ class Con_Diffusion(torch.nn.Module):
         self.num_classes = self.args.num_classes
         self.num_timesteps = self.args.diffusion_steps
         self.recon_loss = self.args.recon_loss
+        print('num_classes:', self.num_classes)
         if args.dataset == 'carla':
             self._denoise_fn = Denoise(args= self.args,  num_class = self.num_classes)
         elif args.dataset=='kitti':
